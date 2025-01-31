@@ -7,7 +7,7 @@ AetherMind is an experimental AI robotics project where I integrate OpenAI’s A
 The first prototype, **Klaus**, is designed to have:  
 **Memory persistence** – Stores and recalls previous conversations.  
 **Conversational AI** – Uses OpenAI’s API to generate responses.  
-**Future expansion** – Potential for **360° vision**, **real-world mobility**, and **voice interaction.**  
+**Future expansion** – Potential for **vision**, **hearing**, and **therapeutical listening**. The last one is in the works right now!  
 
 ---
 
@@ -15,6 +15,7 @@ The first prototype, **Klaus**, is designed to have:
 ### **Requirements:**  
 1️. **An OpenAI API key**  
 2️. **A `.env` file containing the API key**  
+
 3. **requirments.txt**  
 
 ### **Setup Instructions:**  
@@ -49,8 +50,8 @@ The first prototype, **Klaus**, is designed to have:
 **Basic AI conversation system** *(Completed!)*  
 **Basic Arduino implementation system** *(Completed!)*   
 **Experiment with webcam, microphone, and speakers** *(In Progress, voice completed.)*  
-**Integrate a 360° camera for full environmental awareness** *(Planned)*  
-**Potential future integration with Arduino for mobility** *(Long-Term Goal)*  
+**Potential integration of therapeutical listening** *(Currently working on it.)*  
+**Potential future integration with Arduino for mobility inside cool plushies** *(Long-Term Goal)*  
 
 ---
 

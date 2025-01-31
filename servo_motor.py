@@ -1,27 +1,23 @@
 import serial
 import time
 
-# Replace '/dev/cu.usbmodem11201' with your Arduino's port
-arduino = serial.Serial('/dev/cu.usbmodem11201', 9600)
-time.sleep(2)  # Wait for the connection to initialize
+# Try to detect Arduino connection
+try:
+    arduino = serial.Serial('/dev/cu.usbmodem11201', 9600)  # Replace with your actual port
+    time.sleep(2)  # Give the connection some time to initialize
+    ARDUINO_CONNECTED = True
+    print("✅ Arduino connected successfully!")
+except Exception as e:
+    print(f"⚠️ Arduino not detected: {e}")
+    ARDUINO_CONNECTED = False
 
 def send_command_to_arduino(command):
-    """Send a command to the Arduino."""
-    try:
-        arduino.write((command + '\n').encode())  # Send command
-        print(f"Command '{command}' sent to Arduino.")
-    except Exception as e:
-        print(f"Error sending command to Arduino: {e}")
-
-def klaus_control(text):
-    # Check for negation first
-    if "do not rotate" in text.lower() or "don't rotate" in text.lower():
-        return "I will not rotate the motor as per your request."
-    elif "rotate" in text.lower():
-        send_command_to_arduino("rotate")
-        return "Rotating the motor!"
-    elif "reset" in text.lower():
-        send_command_to_arduino("reset")
-        return "Resetting the motor!"
+    """Send a command to the Arduino if connected; otherwise, print a debug message."""
+    if ARDUINO_CONNECTED:
+        try:
+            arduino.write((command + '\n').encode())  # Send command
+            print(f"🟢 Command '{command}' sent to Arduino.")
+        except Exception as e:
+            print(f"❌ Error sending command: {e}")
     else:
-        return "I can't understand that command."
+        print(f"🟡 Debug Mode: Command '{command}' would be sent to Arduino.")

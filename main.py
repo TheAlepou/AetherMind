@@ -128,6 +128,7 @@ def chat_with_gpt(prompt):
 
 if __name__ == "__main__":
     while True:
+                
         user_input = input("Ask Klaus something (or type 'exit' to quit): ")
 
         if user_input.lower() == "exit":

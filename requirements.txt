@@ -3,3 +3,5 @@ pyttsx3
 pyserial
 python-dotenv
 langdetect
+requests
+pygame

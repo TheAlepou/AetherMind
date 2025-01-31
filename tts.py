@@ -1,47 +1,66 @@
-import pyttsx3
-from langdetect import detect
-import platform
-# Initialize the text-to-speech engine
-tts_engine = pyttsx3.init()
+import requests
+import os
+import pygame  # To play the generated audio
+from dotenv import load_dotenv
 
-voices = tts_engine.getProperty('voices')
+# Load API key from environment variable
+load_dotenv()
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+VOICE_ID = "iP95p4xoKVk53GoZ742B"  # Replace with the correct voice ID
 
-for voice in voices:
-    print(f"ID: {voice.id}, Name: {voice.name}, Lang: {voice.languages}")
+# Load API key from .env file
+load_dotenv()
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 
-def set_voice(language):
-    voices = tts_engine.getProperty('voices')
-    
-    lang_map = {
-        "en": "com.apple.speech.synthesis.voice.Alex",  # Example for English (MacOS)
-        "ro": "com.apple.speech.synthesis.voice.Ioana",  # Example for Romanian (MacOS)
-        "fr": "com.apple.speech.synthesis.voice.Thomas"  # Example for French
-    }
-    
-    selected_voice = lang_map.get(language, None)
-    
-    if selected_voice:
-        tts_engine.setProperty('voice', selected_voice)
-    else:
-        print(f"No dedicated voice found for '{language}', using default.")
+# ElevenLabs API URL
+ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech"
+
+# Voice ID for 'Chris - Conversational' (Check your ElevenLabs dashboard for exact ID)
+CHRIS_VOICE_ID = "iP95p4xoKVk53GoZ742B"  # Replace this with the actual voice ID
 
 def speak(text):
-    """Speak the given text using pyttsx3."""
-    system_name = platform.system()
+    """Convert text to speech using ElevenLabs API and play the audio."""
     try:
-        if system_name in ["Darwin", "Windows"]:
-            tts_engine.stop()  # Stop any ongoing speech to prevent overlap
-            tts_engine.setProperty('rate', 150)  # Set the desired rate
-            language = detect(text)  # Auto-detect input language
-            set_voice(language)  # Set the voice based on the detected language
-            tts_engine.say(text)
-            tts_engine.runAndWait()
-        elif system_name == "Linux":
-            print("Please install espeak if you're on Linux.")
-            # Use espeak (ensure it's installed!)
-            os.system(f'espeak "{text}"')
-        else:
-            print("Unsupported operating system.")
-    
+        # API request to generate speech
+        response = requests.post(
+            f"{ELEVENLABS_URL}/{CHRIS_VOICE_ID}",
+            headers={"xi-api-key": ELEVENLABS_API_KEY, "Content-Type": "application/json"},
+            json={"text": text, "voice_settings": {"stability": 0.5, "similarity_boost": 0.7}}
+        )
+
+        headers = {
+            "xi-api-key": ELEVENLABS_API_KEY,
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "text": text,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+                "stability": 0.3,  # Less robotic, more expressive
+                "similarity_boost": 0.7,  # More natural, less "perfect"
+                "style": 0.6,  # More storytelling vibe
+                "use_speaker_boost": True
+            }
+        }
+        # Check for errors
+        if response.status_code != 200:
+            print(f"Error: {response.status_code}, {response.text}")
+            return
+
+        # Save audio file
+        audio_file = "output.mp3"
+        with open(audio_file, "wb") as f:
+            f.write(response.content)
+
+        # Play the audio using pygame
+        pygame.mixer.init()
+        pygame.mixer.music.load(audio_file)
+        pygame.mixer.music.play()
+
+        # Wait until audio is done playing
+        while pygame.mixer.music.get_busy():
+            continue
+
     except Exception as e:
         print(f"Error in speak(): {e}")
