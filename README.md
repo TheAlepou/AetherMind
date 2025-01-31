@@ -1,4 +1,4 @@
-# **AetherMind** 🚀  
+# **AetherMind**   
 *A test project where I create an OpenAI-powered robotics system using Arduino or a computer-based platform.*  
 
 ## **What is AetherMind?**  
@@ -47,7 +47,7 @@ The first prototype, **Klaus**, is designed to have:
 
 ## **Future Plans & Roadmap**  
 **Basic AI conversation system** *(Completed!)*  
-**Basic Arduino implementation system** *(Completed!)*
+**Basic Arduino implementation system** *(Completed!)*   
 **Experiment with webcam, microphone, and speakers** *(In Progress)*  
 **Integrate a 360° camera for full environmental awareness** *(Planned)*  
 **Potential future integration with Arduino for mobility** *(Long-Term Goal)*  
