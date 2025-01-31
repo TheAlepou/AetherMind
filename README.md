@@ -14,13 +14,13 @@ The first prototype, **Klaus**, is designed to have:
 ## **How to Use Klaus (First Prototype)**  
 ### **Requirements:**  
 1️. **An OpenAI API key**  
-2️. **A `.env` file containing the API key**
+2️. **A `.env` file containing the API key**  
 3. **requirments.txt**  
 
 ### **Setup Instructions:**  
 1. **Clone this repository:**  
    ```bash
-   git clone https://github.com/your-username/AetherMind.git
+   git clone https://github.com/TheAlepou/AetherMind.git
    cd AetherMind
    ```  
 2. **Install dependencies:**  
@@ -48,7 +48,7 @@ The first prototype, **Klaus**, is designed to have:
 ## **Future Plans & Roadmap**  
 **Basic AI conversation system** *(Completed!)*  
 **Basic Arduino implementation system** *(Completed!)*   
-**Experiment with webcam, microphone, and speakers** *(In Progress)*  
+**Experiment with webcam, microphone, and speakers** *(In Progress, voice completed.)*  
 **Integrate a 360° camera for full environmental awareness** *(Planned)*  
 **Potential future integration with Arduino for mobility** *(Long-Term Goal)*  
 
