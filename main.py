@@ -2,6 +2,8 @@ import openai
 import os
 import json
 from dotenv import load_dotenv
+from servo_motor import *
+from tts import *
 
 # Load API key from .env file
 load_dotenv()
@@ -116,7 +118,9 @@ def chat_with_gpt(prompt):
 
         assistant_response = response.choices[0].message.content
         memory = add_to_memory(memory, prompt, assistant_response)  # Save response to memory
+        
         return assistant_response
+        
 
     except Exception as e:
         debug_print(f"Error: {e}")
@@ -124,8 +128,28 @@ def chat_with_gpt(prompt):
 
 if __name__ == "__main__":
     while True:
-        user_input = input("Ask something (or type 'exit' to quit): ")
+        user_input = input("Ask Klaus something (or type 'exit' to quit): ")
+
         if user_input.lower() == "exit":
             break
+        
+        # Step 1: Send user input to ChatGPT for interpretation
         response = chat_with_gpt(user_input)
-        print("AI Response:", response)
+
+        # Step 2: Check if the response indicates an action
+        if "rotate the motor" in user_input.lower() or "spin" in user_input.lower():
+            klaus_response = "Sure, I'm rotating the motor now!"
+            send_command_to_arduino("rotate")  # Perform the action
+            speak(klaus_response)
+            print("Klaus says:", klaus_response)
+
+        elif "reset the motor" in user_input.lower():
+            klaus_response = "Resetting the motor for you!"
+            send_command_to_arduino("reset")  # Perform the action
+            speak(klaus_response)
+            print("Klaus says:", klaus_response)
+
+        else:
+            # Default: Speak ChatGPT's conversational response
+            speak(response)
+            print("Klaus says:", response)
