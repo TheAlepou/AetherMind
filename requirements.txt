@@ -1,7 +1,17 @@
-openai
-pyttsx3
-pyserial
-python-dotenv
-langdetect
-requests
-pygame
+# Core dependencies
+openai>=1.0.0  # For ChatGPT and Whisper API
+sounddevice>=0.4.6  # For audio recording
+numpy>=1.26.0  # Required for audio processing
+python-dotenv>=1.0.0  # For loading environment variables
+pyaudio>=0.2.13  # For audio input/output
+wave>=0.0.2  # For .wav file handling
+
+# Speech-to-text
+openai-whisper>=20231117  # For speech recognition
+
+# Optional but recommended
+noisereduce>=3.0.0  # For cleaning audio input
+webrtcvad>=2.0.10  # For voice activity detection
+
+# System control
+pyserial>=3.5  # For Arduino communication

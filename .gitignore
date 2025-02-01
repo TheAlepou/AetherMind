@@ -170,3 +170,9 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 output.mp3
+.DS_Store
+chat_memory.json
+input_audio.wav
+input.wav
+speech.wav
+speech_input.py

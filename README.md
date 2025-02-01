@@ -1,13 +1,20 @@
 # **AetherMind**   
 *A test project where I create an OpenAI-powered robotics system using Arduino or a computer-based platform.*  
 
+## WARNING!! THIS IS THE DEV BRANCH OF **AetherMind**. USE AT YOUR OWN RISK, YOU HAVE BEEN WARNED.
+### This branch is for experimental features. Nothing here is guaranteed to work.
+### If you have suggestions, feel free to open an issue!
+
 ## **What is AetherMind?**  
-AetherMind is an experimental AI robotics project where I integrate OpenAI’s API into a **computer-based AI system** and eventually **an Arduino-powered robot.**  
+AetherMind (Officially known as AetherMind AI) is an experimental AI robotics project where I integrate OpenAI’s API into a **computer-based AI system** and eventually **an Arduino-powered robot.**  
 
 The first prototype, **Klaus**, is designed to have:  
 **Memory persistence** – Stores and recalls previous conversations.  
 **Conversational AI** – Uses OpenAI’s API to generate responses.  
-**Future expansion** – Potential for **vision**, **hearing**, and **therapeutical listening**. The last one is in the works right now!  
+**Future expansion** – Potential for **vision**, **hearing**, and **therapeutical listening**. Hearing is in the works right now!  
+
+## Known issues!
+### Speech recognition still unstable, investigating delays in TTS.
 
 ---
 
@@ -42,6 +49,12 @@ The first prototype, **Klaus**, is designed to have:
 5. **Run Klaus:**  
    ```bash
    python main.py
+6. **Additional Steps**
+   ```  
+   On macOS: brew install portaudio
+   On Linux: sudo apt-get install python3-pyaudio
+   On Windows: No additional steps needed
+
    ```  
 
 ---

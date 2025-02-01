@@ -1,66 +1,67 @@
 import requests
 import os
-import pygame  # To play the generated audio
+import time
+import pygame
 from dotenv import load_dotenv
 
-# Load API key from environment variable
+# Load environment variables once
 load_dotenv()
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
-VOICE_ID = "iP95p4xoKVk53GoZ742B"  # Replace with the correct voice ID
-
-# Load API key from .env file
-load_dotenv()
-ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
-
-# ElevenLabs API URL
 ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech"
+VOICE_ID = "iP95p4xoKVk53GoZ742B"
 
-# Voice ID for 'Chris - Conversational' (Check your ElevenLabs dashboard for exact ID)
-CHRIS_VOICE_ID = "iP95p4xoKVk53GoZ742B"  # Replace this with the actual voice ID
+# Voice settings for natural conversation
+VOICE_SETTINGS = {
+    "stability": 0.5,
+    "similarity_boost": 0.7
+}
 
 def speak(text):
-    """Convert text to speech using ElevenLabs API and play the audio."""
+    """Convert text to speech and play it"""
+    if not text:
+        return
+        
     try:
-        # API request to generate speech
+        # Generate speech from text
         response = requests.post(
-            f"{ELEVENLABS_URL}/{CHRIS_VOICE_ID}",
-            headers={"xi-api-key": ELEVENLABS_API_KEY, "Content-Type": "application/json"},
-            json={"text": text, "voice_settings": {"stability": 0.5, "similarity_boost": 0.7}}
+            f"{ELEVENLABS_URL}/{VOICE_ID}",
+            headers={
+                "xi-api-key": ELEVENLABS_API_KEY,
+                "Content-Type": "application/json"
+            },
+            json={
+                "text": text,
+                "voice_settings": VOICE_SETTINGS
+            }
         )
 
-        headers = {
-            "xi-api-key": ELEVENLABS_API_KEY,
-            "Content-Type": "application/json"
-        }
-        
-        data = {
-            "text": text,
-            "model_id": "eleven_multilingual_v2",
-            "voice_settings": {
-                "stability": 0.3,  # Less robotic, more expressive
-                "similarity_boost": 0.7,  # More natural, less "perfect"
-                "style": 0.6,  # More storytelling vibe
-                "use_speaker_boost": True
-            }
-        }
-        # Check for errors
         if response.status_code != 200:
             print(f"Error: {response.status_code}, {response.text}")
             return
 
-        # Save audio file
-        audio_file = "output.mp3"
+        # Save and play audio
+        audio_file = "response.mp3"
         with open(audio_file, "wb") as f:
             f.write(response.content)
 
-        # Play the audio using pygame
+        # Initialize pygame mixer
         pygame.mixer.init()
         pygame.mixer.music.load(audio_file)
         pygame.mixer.music.play()
 
-        # Wait until audio is done playing
+        # Wait for audio to finish
         while pygame.mixer.music.get_busy():
-            continue
+            time.sleep(0.1)
 
+        # Cleanup
+        pygame.mixer.quit()
+        os.remove(audio_file)
+
+    except KeyboardInterrupt:
+        print("\nSpeech interrupted")
+        pygame.mixer.quit()
+        if os.path.exists("response.mp3"):
+            os.remove("response.mp3")
+    
     except Exception as e:
-        print(f"Error in speak(): {e}")
+        print(f"Error in text-to-speech: {e}")

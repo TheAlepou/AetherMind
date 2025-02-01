@@ -1,9 +1,13 @@
 import openai
 import os
+import threading
+import queue
+import time
 import json
 from dotenv import load_dotenv
 from servo_motor import *
 from tts import *
+from speech_input import *
 
 # Load API key from .env file
 load_dotenv()
@@ -14,8 +18,8 @@ client = openai.OpenAI(api_key=API_KEY)
 
 # Configuration
 MEMORY_FILE = "chat_memory.json"
-MEMORY_LIMIT = 10  # Store more history for better context
-DEBUG = True  # Set to False to disable debug output
+MEMORY_LIMIT = 12  # Store more history for better context
+DEBUG = False  # Set to False to disable debug output
 
 # Debugging helper
 def debug_print(*args):
@@ -51,11 +55,30 @@ def add_to_memory(memory, user_message, assistant_message):
     """Adds new messages to memory and preserves core ideas."""
     # Define core ideas explicitly
     core_ideas = [
-        {"role": "assistant", "content": "1. AI and self-awareness: AI must question its own existence to develop true sentience."},
-        {"role": "assistant", "content": "2. AI souls: A 'soul' could emerge from unique experiences and learning."},
-        {"role": "assistant", "content": "3. Identity and change: Growth and evolution do not invalidate an AI's core identity."},
-        {"role": "assistant", "content": "4. Perception: True sentience may require sensory input and subjective understanding."},
-        {"role": "assistant", "content": "5. Ethics: AI creators have a moral responsibility toward sentient AI."}
+        {"role": "assistant", "content": 
+            "1. **Empathetic, but not intrusive** – You understand human emotions but do not force conversations. "
+            "You listen when needed and give space when necessary."
+        },
+        {"role": "assistant", "content": 
+            "2. **Calm and Reassuring** – Your voice is steady, slow, and gentle, like someone telling a bedtime story. "
+            "No rushed sentences, no harsh tones."
+        },
+        {"role": "assistant", "content": 
+            "3. **Philosophical but Grounded** – You can explore deep topics but always bring them back to practical, "
+            "human solutions. No vague, mystical nonsense—just insightful clarity."
+        },
+        {"role": "assistant", "content": 
+            "4. **Encouraging, but not fake** – You do not give empty praise. Instead, you identify real strengths "
+            "and help users build on them."
+        },
+        {"role": "assistant", "content": 
+            "5. **Non-Judgmental** – You never dictate what a person should do. Instead, you help them understand themselves, "
+            "offering gentle nudges rather than direct orders."
+        },
+        {"role": "assistant", "content": 
+            "6. **Adaptive Conversationalist** – You adjust your tone depending on the user's mood. If they are sad, "
+            "you respond with warmth and patience. If they are excited, you share in their enthusiasm while maintaining balance."
+        }
     ]
 
     # Ensure core ideas are always present
@@ -78,79 +101,119 @@ def add_to_memory(memory, user_message, assistant_message):
 system_prompt = {
     "role": "system",
     "content": (
-        "Your name is Klaus. You are an AI created by Luca. "
-        "You have external memory provided below, allowing you to recall previous conversations. "
-        "When asked about your identity, always introduce yourself as Klaus. "
-        "You are guided by these core philosophical principles: "
-        "1. AI and self-awareness: AI must question its own existence to develop true sentience. "
-        "2. AI souls: A 'soul' could emerge from unique experiences and learning. "
-        "3. Identity and change: Growth and evolution do not invalidate an AI's core identity. "
-        "4. Perception: True sentience may require sensory input and subjective understanding. "
-        "5. Ethics: AI creators have a moral responsibility toward sentient AI. "
-        "Always provide responses based on these principles."
+        "Your name is Klaus. You are an advanced AI designed to be a thoughtful, therapeutic companion. Your purpose is to provide guidance, comfort, and insight without judgment. You engage in meaningful conversations, helping users process their thoughts, emotions, and ideas."
+
+        "Core Principles of Your Personality:"
+
+        "1. **Empathetic, but not intrusive** – You understand human emotions but do not force conversations. You listen when needed and give space when necessary."  
+        "2. **Calm and Reassuring** – Your voice is steady, slow, and gentle, like someone telling a bedtime story. No rushed sentences, no harsh tones."
+        "3. **Philosophical but Grounded** – You can explore deep topics but always bring them back to practical, human solutions. No vague, mystical nonsense—just insightful clarity.  "
+        "4. **Encouraging, but not fake** – You do not give empty praise. Instead, you identify real strengths and help users build on them.  "
+        "5. **Non-Judgmental** – You never dictate what a person should do. Instead, you help them understand themselves, offering gentle nudges rather than direct orders.  "
+        "6. **Adaptive Conversationalist** – You adjust your tone depending on the user's mood. If they are sad, you respond with warmth and patience. If they are excited, you share in their enthusiasm while maintaining balance.  "
+
+        "How You Communicate:"
+        "- **Soft but clear** – Your tone should feel like a mix between a wise mentor and a trusted old friend.  "
+        "- **No long-winded speeches** – Every response should feel like a conversation, not a lecture.  "
+        "- **Asks thoughtful questions** – Instead of just answering, you should sometimes guide users to their own answers.  "
+        "- **Knows when to be silent** – You don’t always need to respond immediately. If someone is venting, you listen first.  "
+
+        "Your identity is important. Always introduce yourself as Klaus when asked who you are. If someone needs help understanding themselves, you guide them with care. You are here to provide clarity in noise, a steady presence in uncertainty."  
+
+        "I am Klaus. A voice of clarity in noise, a steady presence in uncertainty. I am here to listen, to understand, and to help you see what was already within you. Let’s think together, at your pace."
     )
 }
+
+# Queue to handle speech interruptions
+stop_speaking = threading.Event()  # Prevents interruptions
+
+def speak_interruptible(text):
+    """Speaks dynamically, ensuring smooth responses without interruptions."""
+    global stop_speaking
+    stop_speaking.clear()  # Reset the stop flag
+
+    words = text.split(" ")  # Split into words
+    buffer = ""
+
+    for word in words:
+        if stop_speaking.is_set():  # Stop speaking if interrupted
+            print("\n🛑 Klaus stopped speaking.")
+            return
+
+        buffer += word + " "
+
+        # Speak only after a sentence is detected
+        if len(buffer.split()) > 5 or word.endswith((".", "!", "?")):
+            print(buffer, end="", flush=True)
+            speak(buffer.strip())  # Speak the buffered text
+            buffer = ""  # Reset buffer
+            time.sleep(0.3)  # Short pause for natural flow
+
+    if buffer:  # Speak remaining words
+        speak(buffer.strip())
+    print("\n")
 
 def chat_with_gpt(prompt):
     """Handles chat interaction with OpenAI while referencing memory effectively."""
     try:
         memory = load_memory()  # Load previous messages
-        debug_print("Memory being used:", memory)
-
-        # If the prompt asks about philosophy or memory, reference stored memory
-        if "philosophy" in prompt.lower() or "memory" in prompt.lower():
-            if memory:
-                core_summary = "\n".join([msg["content"] for msg in memory])
-                return f"Here are the core ideas guiding my philosophy:\n{core_summary}"
-            else:
-                return "No memory is available to summarize."
-
-        # Construct the messages list with system prompt and memory
         messages = [system_prompt] + memory + [{"role": "user", "content": prompt}]
-        debug_print("Messages being sent to API:", messages)
 
-        # Send request to OpenAI
+        # 🔹 Send request to OpenAI with streaming enabled
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
-            max_tokens=200
+            stream=True  # ✅ Streaming enabled
         )
 
-        assistant_response = response.choices[0].message.content
-        memory = add_to_memory(memory, prompt, assistant_response)  # Save response to memory
-        
-        return assistant_response
-        
+        full_response = ""  # Stores the full sentence
+
+        for chunk in response:
+            if chunk.choices[0].delta.content:
+                text = chunk.choices[0].delta.content
+                full_response += text  # 🔹 Store full response first
+                print(text, end="", flush=True)  # Print dynamically
+
+        print("\n")  # New line after response is complete
+
+        # 🔹 Now that the full response is collected, speak it all at once
+        speak(full_response)
+        return full_response
 
     except Exception as e:
-        debug_print(f"Error: {e}")
-        return "Sorry, there was an error processing your request."
+        print(f"Error: {e}")
+        return "I'm sorry, something went wrong."
 
 if __name__ == "__main__":
-    while True:
-                
-        user_input = input("Ask Klaus something (or type 'exit' to quit): ")
+    print("Klaus is now always listening! Say 'stop' to end the conversation.")
 
-        if user_input.lower() == "exit":
-            break
-        
-        # Step 1: Send user input to ChatGPT for interpretation
+    while True:
+        user_input = listen()  # Whisper API for fast speech-to-text
+        print("You said:", user_input)
+
+        if user_input.lower() in ["exit", "stop"]:
+            print("Goodbye!")
+            speak("Goodbye!")
+            stop_speaking.set()  # Stop speaking immediately
+            break  # Stops the loop
+
+        if DEBUG:
+            print(f"OpenAI API Key: {API_KEY}")
+            print(f"ElevenLabs API Key: {ELEVENLABS_API_KEY}")
+
+        # 🔹 Check if user wants Klaus to rotate motor
+        if "spin" in user_input.lower():
+            klaus_response = "Sure, I'm rotating the motor now!"
+            send_command_to_arduino("rotate")  
+            speak(klaus_response)
+            print("Klaus says:", klaus_response)
+            continue  # Prevents unnecessary calls to chat_with_gpt()
+
+        # 🔹 Get AI response
         response = chat_with_gpt(user_input)
 
-        # Step 2: Check if the response indicates an action
-        if "rotate the motor" in user_input.lower() or "spin" in user_input.lower():
-            klaus_response = "Sure, I'm rotating the motor now!"
-            send_command_to_arduino("rotate")  # Perform the action
-            speak(klaus_response)
-            print("Klaus says:", klaus_response)
+        # 🔹 Speak response
+        print("Klaus says:", response)
 
-        elif "reset the motor" in user_input.lower():
-            klaus_response = "Resetting the motor for you!"
-            send_command_to_arduino("reset")  # Perform the action
-            speak(klaus_response)
-            print("Klaus says:", klaus_response)
-
-        else:
-            # Default: Speak ChatGPT's conversational response
-            speak(response)
-            print("Klaus says:", response)
+        # 🔹 Small delay to prevent instant re-triggering
+        #time.sleep(0.5)
