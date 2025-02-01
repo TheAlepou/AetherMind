@@ -37,20 +37,16 @@ The first prototype, **Klaus**, is designed to have:
    ```  
 3. **Create a `.env` file:**  
    - Open a text editor and create a new file named `.env`  
-   - Add the following line (replace with your actual API key):  
+   - Add the following lines (replace with your actual API key):  
      ```
      OPENAI_API_KEY=your_api_key_here
      ELEVENLABS_API_KEY=your_api_key_here
      ```  
    - Save the file.
-4. **Install the dependencies:**
-   ```run 
-   pip install -r requirements.txt for the dependencies to install
-   ```
-5. **Run Klaus:**  
+4. **Run Klaus:**  
    ```bash
    python main.py
-6. **Additional Steps**
+5. **Additional Steps**
    ```  
    On macOS: brew install portaudio
    On Linux: sudo apt-get install python3-pyaudio
