@@ -40,6 +40,7 @@ The first prototype, **Klaus**, is designed to have:
    - Add the following line (replace with your actual API key):  
      ```
      OPENAI_API_KEY=your_api_key_here
+     ELEVENLABS_API_KEY=your_api_key_here
      ```  
    - Save the file.
 4. **Install the dependencies:**
