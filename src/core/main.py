@@ -5,9 +5,9 @@ import queue
 import time
 import json
 from dotenv import load_dotenv
-from servo_motor import *
-from tts import *
-from speech_input import *
+from modules.tts import *
+from modules.speech_input import *
+from modules.servo_motor import *
 
 # Load API key from .env file
 load_dotenv()
@@ -184,7 +184,7 @@ def chat_with_gpt(prompt):
         print(f"Error: {e}")
         return "I'm sorry, something went wrong."
 
-if __name__ == "__main__":
+def main():
     print("Klaus is now always listening! Say 'stop' to end the conversation.")
 
     while True:
@@ -217,3 +217,7 @@ if __name__ == "__main__":
 
         # 🔹 Small delay to prevent instant re-triggering
         #time.sleep(0.5)
+
+
+if __name__ == "__main__":
+    main()
