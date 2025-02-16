@@ -16,9 +16,10 @@ import tempfile
 import threading
 from filelock import FileLock
 from queue import Queue, Empty
-from .tts import interrupt_speech  # This should signal the TTS to stop speaking
+from .tts import interrupt_speech
 
-# Core constants and configuration
+
+# Add these constants at the top with other constants
 DEBUG = False  # Toggle debug prints
 PRINT_COOLDOWN = 0.5  # Minimum seconds between voice detection prints
 
@@ -29,12 +30,12 @@ API_KEY = os.getenv("OPENAI_API_KEY")
 SAMPLE_RATE = 16000
 CHUNK_SIZE = 480  # Reduced for faster processing
 MAX_RECORD_TIME = 30
-SILENCE_TIME = 3.0  # 3 seconds of silence
+SILENCE_TIME = 3.0 # 3 seconds of silence
 SILENCE_THRESHOLD = 0.01
 CONSECUTIVE_SILENCE_FRAMES = 3  # New constant
 
-# Initialize VAD in aggressive mode
-vad = webrtcvad.Vad(3)
+# Initialize VAD
+vad = webrtcvad.Vad(3)  # Aggressive mode
 
 def transcribe_audio(audio_file):
     """Transcribe audio using Whisper API"""
@@ -52,18 +53,17 @@ def transcribe_audio(audio_file):
         try:
             if os.path.exists(audio_file):
                 os.remove(audio_file)
-        except Exception:
+        except:
             pass
 
 def save_audio(audio_data):
     """Save audio data to WAV file"""
     # Create audio directory if it doesn't exist
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    audio_dir = os.path.join(base_dir, "data", "audio")
+    audio_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "audio")
     os.makedirs(audio_dir, exist_ok=True)
 
-    # Generate filename
-    audio_file = os.path.join(audio_dir, "speech.wav")
+    # Generate unique filename
+    audio_file = os.path.join(audio_dir, f"speech.wav")
 
     try:
         with wave.open(audio_file, "wb") as wf:
@@ -76,24 +76,16 @@ def save_audio(audio_data):
         print(f"⚠️ Error saving audio: {e}")
         return None
 
+
 def listen():
-    """
-    Listen for audio input.
-    
-    Core feature: if user begins speaking while TTS is active, interrupt_speech() is called.
-    """
     q = Queue()
     last_audio_time = time.time()
     audio_data = b""
     silence_counter = 0
     recording = True
 
-    # Use a variable to debounce interruptions (in seconds)
-    debounce_interval = 1.0  # adjust as needed
-    last_interrupt_time = time.time() - debounce_interval
-
     def callback(indata, frames, cb_time, status):
-        nonlocal last_audio_time, silence_counter, last_interrupt_time
+        nonlocal last_audio_time, silence_counter
         if status:
             print(status, flush=True)
             
@@ -103,26 +95,22 @@ def listen():
             nan=0.0, posinf=1.0, neginf=-1.0
         )
         
-        # Calculate audio intensity
+        # Calculate intensity from clean data
         audio_intensity = np.abs(np_data).mean()
         
-        # Prepare data for VAD (convert back to int16)
+        # Convert back to int16 for VAD
         vad_data = np.clip(np_data * 32767, -32768, 32767).astype(np.int16)
         
         try:
-            # VAD expects a frame duration of 10, 20, or 30ms
+            # Ensure frame duration matches VAD requirements (10, 20, or 30ms)
             is_speech = vad.is_speech(vad_data.tobytes(), SAMPLE_RATE)
         except Exception as e:
             is_speech = False
         
-        current_time = time.time()
-        # Only interrupt if enough time has passed since the last interruption
-        if (audio_intensity > SILENCE_THRESHOLD or is_speech) and (current_time - last_interrupt_time >= debounce_interval):
-            from .tts import interrupt_speech  # local import for safety
-            interrupt_speech()  # Signal to interrupt current AI speech
-            last_interrupt_time = current_time
+        if audio_intensity > SILENCE_THRESHOLD or is_speech:
+            interrupt_speech()
             q.put(vad_data.tobytes())
-            last_audio_time = current_time
+            last_audio_time = time.time()
             silence_counter = 0
         else:
             silence_counter += 1
@@ -164,18 +152,13 @@ def listen():
                     print("\n🛑 Recording stopped by user")
                     recording = False
                     return ""
+
     finally:
         recording = False
         if stream is not None:
             stream.stop()
             stream.close()
 
-    # Check if the captured audio is long enough (at least 0.5 seconds)
-    min_bytes = int(SAMPLE_RATE * 0.5 * 2)  # 0.1 sec * SAMPLE_RATE samples * 2 bytes per sample
-    if len(audio_data) < min_bytes:
-        print("🛑 Recorded audio too short for transcription.")
-        return ""
-        
     if len(audio_data) > 0:
         audio_file = save_audio(audio_data)
         if audio_file:
