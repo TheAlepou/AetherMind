@@ -18,7 +18,7 @@ The first prototype, **Klaus**, is designed to have:
 
 ---
 
-## **How to Use Klaus (Second Prototype)**  
+## **How to Use Klaus (First Prototype)**  
 ### **Requirements:**  
 1. **Python 3.9.X**  
 2. **An OpenAI API key**  
