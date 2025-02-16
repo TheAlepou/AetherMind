@@ -131,31 +131,23 @@ system_prompt = {
 # Queue to handle speech interruptions
 stop_speaking = threading.Event()  # Prevents interruptions
 
+def background_listener():
+    """
+    Continuously listens in the background.
+    The listen() function’s callback already calls interrupt_speech()
+    when it detects audio.
+    """
+    while True:
+        # Call listen() and discard its result.
+        _ = listen()
+        # Small delay to prevent overloading the system
+        time.sleep(0.1)
+
 def speak_interruptible(text):
-    """Speaks dynamically, ensuring smooth responses without interruptions."""
-    global stop_speaking
-    stop_speaking.clear()  # Reset the stop flag
-
-    words = text.split(" ")  # Split into words
-    buffer = ""
-
-    for word in words:
-        if stop_speaking.is_set():  # Stop speaking if interrupted
-            print("\n🛑 Klaus stopped speaking.")
-            return
-
-        buffer += word + " "
-
-        # Speak only after a sentence is detected
-        if len(buffer.split()) > 5 or word.endswith((".", "!", "?")):
-            print(buffer, end="", flush=True)
-            speak(buffer.strip())  # Speak the buffered text
-            buffer = ""  # Reset buffer
-            time.sleep(0.3)  # Short pause for natural flow
-
-    if buffer:  # Speak remaining words
-        speak(buffer.strip())
-    print("\n")
+    """Interrupt any ongoing speech and then speak the full text."""
+    from modules.tts import interrupt_speech, speak  # Use the TTS module's functions
+    interrupt_speech()  # Stop any ongoing speech
+    speak(text)
 
 def chat_with_gpt(prompt):
     """Handles chat interaction with OpenAI while referencing memory effectively."""
@@ -163,7 +155,6 @@ def chat_with_gpt(prompt):
         memory = load_memory()  # Load previous messages
         messages = [system_prompt] + memory + [{"role": "user", "content": prompt}]
 
-        # 🔹 Send request to OpenAI with streaming enabled
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
@@ -171,17 +162,13 @@ def chat_with_gpt(prompt):
         )
 
         full_response = ""  # Stores the full sentence
-
         for chunk in response:
             if chunk.choices[0].delta.content:
                 text = chunk.choices[0].delta.content
-                full_response += text  # 🔹 Store full response first
-                print(text, end="", flush=True)  # Print dynamically
-
-        print("\n")  # New line after response is complete
-
-        # 🔹 Now that the full response is collected, speak it all at once
-        speak(full_response)
+                full_response += text
+                print(text, end="", flush=True)
+        print("\n")
+        speak_interruptible(full_response)
         return full_response
 
     except Exception as e:
@@ -193,6 +180,9 @@ def main():
     print("Klaus is now always listening! Say 'stop' to end the conversation.")
     
     ttsm = TTSManager()
+    # Start background microphone listening so that the callback remains active even during TTS playback
+    listener_thread = threading.Thread(target=background_listener, daemon=True)
+    listener_thread.start()
     
     while True:
         user_input = listen()
@@ -201,9 +191,8 @@ def main():
         if "System quit." in user_input.lower():
             print("Goodbye!")
             should_interrupt.set()  # Signal interruption
-            speak_interruptible("It seems like you might want to end our conversation for now. That’s perfectly okay. I’m here whenever you need to talk again. Take care, and remember, I’m just a message away should you want to share your thoughts or feelings.!")  # Stop any ongoing speech
-            time.sleep(0.1)  # Brief pause to allow interruption
-            #speak("Goodbye!")
+            speak_interruptible("It seems like you might want to end our conversation for now. That’s perfectly okay. I’m here whenever you need to talk again. Take care, and remember, I’m just a message away should you want to share your thoughts or feelings.!")
+            time.sleep(0.1)
             break
         
         if user_input in ["Klaus"]:
@@ -214,23 +203,16 @@ def main():
             print(f"OpenAI API Key: {API_KEY}")
             print(f"ElevenLabs API Key: {ELEVENLABS_API_KEY}")
 
-        # 🔹 Check if user wants Klaus to rotate motor
         if "spin" in user_input.lower():
             klaus_response = "Sure, I'm rotating the motor now!"
             send_command_to_arduino("rotate")  
             speak(klaus_response)
             print("Klaus says:", klaus_response)
-            continue  # Prevents unnecessary calls to chat_with_gpt()
+            continue
 
-        # 🔹 Get AI response
         response = chat_with_gpt(user_input)
-
-        # 🔹 Speak response
         print("Klaus says:", response)
-
-        # 🔹 Small delay to prevent instant re-triggering
-        #time.sleep(0.5)
-
+        # Optional: time.sleep(0.5)
 
 if __name__ == "__main__":
     main()

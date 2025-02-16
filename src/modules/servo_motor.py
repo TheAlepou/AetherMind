@@ -3,7 +3,7 @@ import time
 
 # Try to detect Arduino connection
 try:
-    arduino = serial.Serial('/dev/cu.usbmodem11201', 9600)  # Replace with your actual port
+    arduino = serial.Serial('/dev/cu.usbmodem11301', 9600)  # Replace with your actual port
     time.sleep(2)  # Give the connection some time to initialize
     ARDUINO_CONNECTED = True
     print("✅ Arduino connected successfully!")

@@ -1,13 +1,10 @@
-import requests
 import os
-import sys
-import time
 import threading
-from queue import Queue
+import requests
 import pygame
 from dotenv import load_dotenv
 
-# Load environment variables once
+# Load API Key and configuration
 load_dotenv()
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech"
@@ -19,38 +16,37 @@ VOICE_SETTINGS = {
     "similarity_boost": 0.7
 }
 
-# Add global state tracking
+# State tracking
 is_speaking = threading.Event()
 should_interrupt = threading.Event()
-audio_queue = Queue()
 
 AUDIO_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "audio")
 RESPONSE_FILE = os.path.join(AUDIO_DIR, "response.mp3")
 
 def ensure_audio_dir():
-    """Create audio directory if it doesn't exist"""
+    """Create the audio directory if it doesn't exist."""
     os.makedirs(AUDIO_DIR, exist_ok=True)
 
 def cleanup_pygame():
-    """Force cleanup pygame resources"""
+    """Cleanup pygame resources."""
     try:
         pygame.mixer.music.stop()
         pygame.mixer.quit()
         pygame.quit()
-    except:
+    except Exception:
         pass
 
 def speak(text):
-    """Convert text to speech and play it with interrupt support"""
+    """Convert text to speech and play it with interrupt support."""
     if not text:
         return
-        
+
     try:
         ensure_audio_dir()
-        cleanup_pygame()  # Force cleanup before starting
+        cleanup_pygame()
         is_speaking.set()
         should_interrupt.clear()
-        
+
         response = requests.post(
             f"{ELEVENLABS_URL}/{VOICE_ID}",
             headers={"xi-api-key": ELEVENLABS_API_KEY},
@@ -68,7 +64,7 @@ def speak(text):
         pygame.mixer.music.load(RESPONSE_FILE)
         pygame.mixer.music.play()
 
-        # Check for interruption more frequently
+        # Loop and check for interruption
         while pygame.mixer.music.get_busy():
             if should_interrupt.is_set():
                 pygame.mixer.music.stop()
@@ -82,8 +78,7 @@ def speak(text):
             os.remove(RESPONSE_FILE)
 
 def interrupt_speech():
-    """Call this from speech input when voice is detected"""
+    """Interrupt ongoing speech."""
     if is_speaking.is_set():
         should_interrupt.set()
         cleanup_pygame()
-        #os.execv(sys.argv[0], sys.argv)
