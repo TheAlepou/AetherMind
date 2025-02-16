@@ -20,10 +20,11 @@ The first prototype, **Klaus**, is designed to have:
 
 ## **How to Use Klaus (First Prototype)**  
 ### **Requirements:**  
-1️. **An OpenAI API key**  
-2️. **A `.env` file containing the API key**  
-
-3. **requirments.txt**  
+1. **Python 3.9.X**  
+2. **An OpenAI API key**  
+3. **An ElevenLabs API key**  
+4. **A `.env` file containing the API keys**  
+5. **requirments.txt**  
 
 ### **Setup Instructions:**  
 1. **Clone this repository:**  
@@ -51,7 +52,6 @@ The first prototype, **Klaus**, is designed to have:
    On macOS: brew install portaudio
    On Linux: sudo apt-get install python3-pyaudio
    On Windows: No additional steps needed
-
    ```  
 
 ---
@@ -59,14 +59,14 @@ The first prototype, **Klaus**, is designed to have:
 ## **Future Plans & Roadmap**  
 **Basic AI conversation system** *(Completed!)*  
 **Basic Arduino implementation system** *(Completed!)*   
-**Experiment with webcam, microphone, and speakers** *(In Progress, voice completed.)*  
+**Experiment with webcam, microphone, and speakers** *(In Progress, voice and hearing completed.)*  
 **Potential integration of therapeutical listening** *(Currently working on it.)*  
 **Potential future integration with Arduino for mobility inside cool plushies** *(Long-Term Goal)*  
 
 ---
 
 ## **Want to Contribute?**  
-Right now, this is a **personal project**, but I may consider making it open-source for collaboration in the future!  
+Right now, this is a **personal project**, but I may consider making it open for collaboration in the future!  
 
 ---
 

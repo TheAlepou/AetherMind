@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from modules.tts import *
 from modules.speech_input import *
 from modules.servo_motor import *
+from utils.kill_tts import TTSManager
 
 # Load API key from .env file
 load_dotenv()
@@ -17,7 +18,10 @@ API_KEY = os.getenv("OPENAI_API_KEY")
 client = openai.OpenAI(api_key=API_KEY)
 
 # Configuration
-MEMORY_FILE = "chat_memory.json"
+memory_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "memory")
+os.makedirs(memory_dir, exist_ok=True)
+
+MEMORY_FILE = os.path.join(memory_dir, f"chat_memory.json")
 MEMORY_LIMIT = 12  # Store more history for better context
 DEBUG = False  # Set to False to disable debug output
 
@@ -128,30 +132,10 @@ system_prompt = {
 stop_speaking = threading.Event()  # Prevents interruptions
 
 def speak_interruptible(text):
-    """Speaks dynamically, ensuring smooth responses without interruptions."""
-    global stop_speaking
-    stop_speaking.clear()  # Reset the stop flag
-
-    words = text.split(" ")  # Split into words
-    buffer = ""
-
-    for word in words:
-        if stop_speaking.is_set():  # Stop speaking if interrupted
-            print("\n🛑 Klaus stopped speaking.")
-            return
-
-        buffer += word + " "
-
-        # Speak only after a sentence is detected
-        if len(buffer.split()) > 5 or word.endswith((".", "!", "?")):
-            print(buffer, end="", flush=True)
-            speak(buffer.strip())  # Speak the buffered text
-            buffer = ""  # Reset buffer
-            time.sleep(0.3)  # Short pause for natural flow
-
-    if buffer:  # Speak remaining words
-        speak(buffer.strip())
-    print("\n")
+    """Interrupt any ongoing speech and then speak the full text."""
+    from modules.tts import interrupt_speech, speak  # Use the TTS module's functions
+    interrupt_speech()  # Stop any ongoing speech
+    speak(text)
 
 def chat_with_gpt(prompt):
     """Handles chat interaction with OpenAI while referencing memory effectively."""
@@ -177,25 +161,34 @@ def chat_with_gpt(prompt):
         print("\n")  # New line after response is complete
 
         # 🔹 Now that the full response is collected, speak it all at once
-        speak(full_response)
+        speak_interruptible(full_response)
         return full_response
 
     except Exception as e:
-        print(f"Error: {e}")
+        if DEBUG:
+            print(f"Error: {e}")
         return "I'm sorry, something went wrong."
 
 def main():
     print("Klaus is now always listening! Say 'stop' to end the conversation.")
-
+    
+    ttsm = TTSManager()
+    
     while True:
-        user_input = listen()  # Whisper API for fast speech-to-text
+        user_input = listen()
         print("You said:", user_input)
-
-        if user_input.lower() in ["exit", "stop"]:
+    
+        if "System quit." in user_input.lower():
             print("Goodbye!")
-            speak("Goodbye!")
-            stop_speaking.set()  # Stop speaking immediately
-            break  # Stops the loop
+            should_interrupt.set()  # Signal interruption
+            speak_interruptible("It seems like you might want to end our conversation for now. That’s perfectly okay. I’m here whenever you need to talk again. Take care, and remember, I’m just a message away should you want to share your thoughts or feelings.!")  # Stop any ongoing speech
+            time.sleep(0.1)  # Brief pause to allow interruption
+            #speak("Goodbye!")
+            break
+        
+        if user_input in ["Klaus"]:
+            speak("Yes, I'm here.")
+            continue
 
         if DEBUG:
             print(f"OpenAI API Key: {API_KEY}")
