@@ -18,12 +18,13 @@ The first prototype, **Klaus**, is designed to have:
 
 ---
 
-## **How to Use Klaus (First Prototype)**  
+## **How to Use Klaus (Second Prototype)**  
 ### **Requirements:**  
 1. **Python 3.9.X**  
 2. **An OpenAI API key**  
-3. **A `.env` file containing the API key**  
-4. **requirments.txt**  
+3. **An ElevenLabs API key**  
+4. **A `.env` file containing the API keys**  
+5. **requirments.txt**  
 
 ### **Setup Instructions:**  
 1. **Clone this repository:**  
