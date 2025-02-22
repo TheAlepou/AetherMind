@@ -48,7 +48,7 @@ The **debate prototype**, **Astra**, is designed for:
    - Save the file.  
 4. **Run Astra:**  
    ```bash
-   python main.py
+   python3.9 run.py
    ```  
 5. **Additional Dependencies (OS-Specific):**  
    ```bash
@@ -66,7 +66,6 @@ The **debate prototype**, **Astra**, is designed for:
 
 ## **Future Plans & Roadmap 🛠️**  
 ✅ **Basic AI conversation system** *(Completed!)*  
-✅ **Basic Arduino integration** *(Completed!)*  
 🔄 **Experimenting with webcam, microphone, and speakers** *(In Progress: Voice & hearing completed!)*  
 ---
 
