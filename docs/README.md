@@ -1,30 +1,32 @@
-# **AetherMind**   
-*A test project where I create an OpenAI-powered robotics system using Arduino or a computer-based platform.*  
+# **AetherMind**  
+*A cutting-edge AI-powered robotics system integrating OpenAI’s API with Arduino and computer-based platforms.*  
 
-## WARNING!! THIS IS THE DEV BRANCH OF **AetherMind**. USE AT YOUR OWN RISK, YOU HAVE BEEN WARNED.
-### This branch is for experimental features. Nothing here is guaranteed to work.
-### If you have suggestions, feel free to open an issue!
-
-## **What is AetherMind?**  
-AetherMind (Officially known as AetherMind AI) is an experimental AI robotics project where I integrate OpenAI’s API into a **computer-based AI system** and eventually **an Arduino-powered robot.**  
-
-The first prototype, **Klaus**, is designed to have:  
-**Memory persistence** – Stores and recalls previous conversations.  
-**Conversational AI** – Uses OpenAI’s API to generate responses.  
-**Future expansion** – Potential for **vision**, **hearing**, and **therapeutical listening**. Hearing is in the works right now!  
-
-## Known issues!
-### Speech recognition still unstable, investigating delays in TTS.
+## ⚠️ WARNING: **EXPERIMENTAL DEV BRANCH** ⚠️  
+This is the development branch of **AetherMind**. Features here are experimental, unstable, and may not work as expected. **Use at your own risk!**  
+If you encounter issues or have suggestions, feel free to open an issue!
 
 ---
 
-## **How to Use Klaus (First Prototype)**  
+## **What is AetherMind?**  
+AetherMind (officially **AetherMind AI**) is an experimental **AI robotics** project that integrates OpenAI’s API into a **computer-based AI system**, with plans for **Arduino-powered robotics**.  
+
+The **debate prototype**, **Astra**, is designed for:
+✅ **Memory Persistence** – Stores and recalls previous conversations.  
+✅ **Conversational AI** – Uses OpenAI’s API to generate responses.  
+✅ **Future Expansion** – Plans to integrate **vision**, **hearing**, and **therapeutic listening**. *(Hearing is currently in development!)*  
+
+### **Known Issues 🚨**
+- 🛠️ **Speech recognition is unstable** (delays in TTS still under investigation).  
+
+---
+
+## **How to Use Astra (First Prototype)**  
 ### **Requirements:**  
-1. **Python 3.9.X**  
-2. **An OpenAI API key**  
-3. **An ElevenLabs API key**  
-4. **A `.env` file containing the API keys**  
-5. **requirments.txt**  
+- **Python 3.9.X**  
+- **An OpenAI API key**  
+- **An ElevenLabs API key**  
+- **A `.env` file containing the API keys**  
+- **Required dependencies (listed in `requirements.txt`)**  
 
 ### **Setup Instructions:**  
 1. **Clone this repository:**  
@@ -38,43 +40,45 @@ The first prototype, **Klaus**, is designed to have:
    ```  
 3. **Create a `.env` file:**  
    - Open a text editor and create a new file named `.env`  
-   - Add the following lines (replace with your actual API key):  
+   - Add the following lines (replace with your actual API keys):  
      ```
      OPENAI_API_KEY=your_api_key_here
      ELEVENLABS_API_KEY=your_api_key_here
      ```  
-   - Save the file.
-4. **Run Klaus:**  
+   - Save the file.  
+4. **Run Astra:**  
    ```bash
    python main.py
-5. **Additional Steps**
    ```  
-   On macOS: brew install portaudio
-   On Linux: sudo apt-get install python3-pyaudio
-   On Windows: No additional steps needed
+5. **Additional Dependencies (OS-Specific):**  
+   ```bash
+   # macOS
+   brew install portaudio
+   
+   # Linux
+   sudo apt-get install python3-pyaudio
+   
+   # Windows
+   # No additional dependencies required
    ```  
 
 ---
 
-## **Future Plans & Roadmap**  
-**Basic AI conversation system** *(Completed!)*  
-**Basic Arduino implementation system** *(Completed!)*   
-**Experiment with webcam, microphone, and speakers** *(In Progress, voice and hearing completed.)*  
-**Potential integration of therapeutical listening** *(Currently working on it.)*  
-**Potential future integration with Arduino for mobility inside cool plushies** *(Long-Term Goal)*  
-
+## **Future Plans & Roadmap 🛠️**  
+✅ **Basic AI conversation system** *(Completed!)*  
+✅ **Basic Arduino integration** *(Completed!)*  
+🔄 **Experimenting with webcam, microphone, and speakers** *(In Progress: Voice & hearing completed!)*  
 ---
 
 ## **Want to Contribute?**  
-Right now, this is a **personal project**, but I may consider making it open for collaboration in the future!  
+Currently, **AetherMind** is a personal project, but contributions may be welcomed in the future! Stay tuned.  
 
 ---
 
-## License
+## **License 📜**  
 This project is licensed under the **AGPL-3.0 License**.  
-Any modifications, including web services using this software, must share their source code.
+Any modifications, including web services using this software, must share their source code.  
 
 ---
 
-### **Final Thoughts**  
-This is just the **beginning** of something huge. If you're interested in AI-driven robotics, stay tuned—**Klaus is evolving.**
+🚀 **AetherMind is just getting started! Stay curious, experiment, and push the boundaries of AI robotics!**

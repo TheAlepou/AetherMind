@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech"
-VOICE_ID = "iP95p4xoKVk53GoZ742B"
+VOICE_ID = "SAz9YHcvj6GT2YYXdXww"
 
 # Voice settings for natural conversation
 VOICE_SETTINGS = {

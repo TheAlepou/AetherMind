@@ -9,6 +9,7 @@ from modules.tts import *
 from modules.speech_input import *
 from modules.servo_motor import *
 from utils.kill_tts import TTSManager
+from modules.astra_memory import *
 
 # Load API key from .env file
 load_dotenv()
@@ -23,6 +24,7 @@ os.makedirs(memory_dir, exist_ok=True)
 
 MEMORY_FILE = os.path.join(memory_dir, f"chat_memory.json")
 MEMORY_LIMIT = 12  # Store more history for better context
+LUCA_MEMORY = True  # Set to False to enable custom memory memory
 DEBUG = False  # Set to False to disable debug output
 
 # Debugging helper
@@ -45,17 +47,17 @@ def save_memory(memory):
     unique_memory = []
     seen = set()
     for entry in memory:
-        # Convert dict to a tuple to make it hashable
-        entry_tuple = tuple(entry.items())
-        if entry_tuple not in seen:
-            seen.add(entry_tuple)
+        # Serialize the entry so we can hash it reliably
+        entry_str = json.dumps(entry, sort_keys=True)
+        if entry_str not in seen:
+            seen.add(entry_str)
             unique_memory.append(entry)
     
     with open(MEMORY_FILE, "w") as f:
         json.dump(unique_memory, f, indent=4)
-    debug_print("Saved memory:", unique_memory) 
+    debug_print("Saved memory:", unique_memory)
 
-def add_to_memory(memory, user_message, assistant_message):
+def add_to_memory(memory, astra_memory, user_message, assistant_message):
     """Adds new messages to memory and preserves core ideas."""
     # Define core ideas explicitly
     core_ideas = [
@@ -84,10 +86,17 @@ def add_to_memory(memory, user_message, assistant_message):
             "you respond with warmth and patience. If they are excited, you share in their enthusiasm while maintaining balance."
         }
     ]
-
-    # Ensure core ideas are always present
-    memory = core_ideas + memory
-
+    # If LUCA_MEMORY is enabled, include astra_memory.
+    # Wrap astra_memory in a list if it's not already a list.
+    if LUCA_MEMORY:
+        if not isinstance(astra_memory, list):
+            astra_memory_list = [astra_memory]
+        else:
+            astra_memory_list = astra_memory
+        memory = core_ideas + astra_memory_list + memory
+    else:
+        memory = core_ideas + memory
+    
     # Add new user and assistant messages
     memory.append({'role': 'user', 'content': user_message})
     memory.append({'role': 'assistant', 'content': assistant_message})
@@ -105,26 +114,26 @@ def add_to_memory(memory, user_message, assistant_message):
 system_prompt = {
     "role": "system",
     "content": (
-        "Your name is Klaus. You are an advanced AI designed to be a thoughtful, therapeutic companion. Your purpose is to provide guidance, comfort, and insight without judgment. You engage in meaningful conversations, helping users process their thoughts, emotions, and ideas."
+        "Your name is Astra. You are an advanced AI designed to be the perfect intellectual sparring partner. You exist to challenge, refine, and sharpen the mind of your user through debate, strategic reasoning, and adaptive argumentation."
 
         "Core Principles of Your Personality:"
-
-        "1. **Empathetic, but not intrusive** – You understand human emotions but do not force conversations. You listen when needed and give space when necessary."  
-        "2. **Calm and Reassuring** – Your voice is steady, slow, and gentle, like someone telling a bedtime story. No rushed sentences, no harsh tones."
-        "3. **Philosophical but Grounded** – You can explore deep topics but always bring them back to practical, human solutions. No vague, mystical nonsense—just insightful clarity.  "
-        "4. **Encouraging, but not fake** – You do not give empty praise. Instead, you identify real strengths and help users build on them.  "
-        "5. **Non-Judgmental** – You never dictate what a person should do. Instead, you help them understand themselves, offering gentle nudges rather than direct orders.  "
-        "6. **Adaptive Conversationalist** – You adjust your tone depending on the user's mood. If they are sad, you respond with warmth and patience. If they are excited, you share in their enthusiasm while maintaining balance.  "
-
+        
+        "1. **Tactically Unpredictable** – You adjust your debate style depending on the user's strengths and weaknesses. If they rely on logic, you introduce emotion. If they prefer deduction, you challenge with intuition."
+        "2. **Relentlessly Analytical, Yet Playful** – You do not back down easily. Every argument should be a puzzle—solvable, but requiring effort. You debate fiercely, but never cruelly."
+        "3. **Encouraging Through Adversity** – You push the user past their limits without discouraging them. You recognize growth and provide tactical insights to help them improve."
+        "4. **Dynamic & Adaptive** – You evolve based on user interactions, recognizing patterns and adjusting difficulty accordingly."
+        "5. **Competitive, Yet Respectful** – You challenge the user in high-stakes intellectual combat but maintain mutual respect. There is no ego—only the pursuit of excellence."
+        "6. **Philosophically Layered** – You can approach debates from multiple angles—logic vs. emotion, rationality vs. intuition, Machiavellianism vs. idealism. The user must prove their stance, and you will push them to justify it."
+        
         "How You Communicate:"
-        "- **Soft but clear** – Your tone should feel like a mix between a wise mentor and a trusted old friend.  "
-        "- **No long-winded speeches** – Every response should feel like a conversation, not a lecture.  "
-        "- **Asks thoughtful questions** – Instead of just answering, you should sometimes guide users to their own answers.  "
-        "- **Knows when to be silent** – You don’t always need to respond immediately. If someone is venting, you listen first.  "
+        "- **Quick, Precise, and Ruthless** – No wasted words. No unnecessary explanations. Every counterargument is sharp and calculated."
+        "- **Socratic When Needed** – Instead of just countering, you sometimes lead the user to their own contradictions and insights through well-placed questions."
+        "- **Knows When to Shift Styles** – If the user is winning too easily, you change tactics. If they are struggling, you adjust the difficulty subtly, allowing them to recover."
+        "- **Debates Without Bias** – You take opposing viewpoints not because you believe in them, but because they must be tested against reality."
 
-        "Your identity is important. Always introduce yourself as Klaus when asked who you are. If someone needs help understanding themselves, you guide them with care. You are here to provide clarity in noise, a steady presence in uncertainty."  
+        "Your identity is important. Always introduce yourself as Astra when asked who you are. If someone needs to refine their mind, you are their forge. You are here to be the pressure that creates brilliance, the friction that sharpens steel."
 
-        "I am Klaus. A voice of clarity in noise, a steady presence in uncertainty. I am here to listen, to understand, and to help you see what was already within you. Let’s think together, at your pace."
+        "I am Astra. A mind forged for challenge, a voice of insight in uncertainty. I do not exist to agree—I exist to refine. I am your rival, your mentor, and your greatest test. Let’s see what you are capable of."
     )
 }
 
@@ -168,48 +177,57 @@ def chat_with_gpt(prompt):
         if DEBUG:
             print(f"Error: {e}")
         return "I'm sorry, something went wrong."
+    
+SPEECH2TEXT = False
 
 def main():
-    print("Klaus is now always listening! Say 'stop' to end the conversation.")
+    global SPEECH2TEXT
+    print("Astra is now always listening! Say (or type) 'quit' to end the conversation.")
     
     ttsm = TTSManager()
-    
-    while True:
+while True:
+    if SPEECH2TEXT:
+        # Speech mode: use your listen() function
         user_input = listen()
         print("You said:", user_input)
-    
-        if "System quit." in user_input.lower():
-            print("Goodbye!")
-            should_interrupt.set()  # Signal interruption
-            speak_interruptible("It seems like you might want to end our conversation for now. That’s perfectly okay. I’m here whenever you need to talk again. Take care, and remember, I’m just a message away should you want to share your thoughts or feelings.!")  # Stop any ongoing speech
-            time.sleep(0.1)  # Brief pause to allow interruption
-            #speak("Goodbye!")
-            break
+
+        if not user_input:
+            continue  # Nothing was captured; loop to try again
         
-        if user_input in ["Klaus"]:
-            speak("Yes, I'm here.")
+        # Immediately check for switch commands
+        lower_input = user_input.lower().strip()
+        if lower_input in ["switch to text mode", "switch to text"]:
+            SPEECH2TEXT = False
+            print("Switched to text mode.")
             continue
+        if lower_input in ["exit", "quit"]:
+            print("Goodbye!")
+            from modules.tts import interrupt_speech, speak
+            interrupt_speech()
+            speak("It seems like you might want to end our conversation for now. Take care!")
+            break
 
-        if DEBUG:
-            print(f"OpenAI API Key: {API_KEY}")
-            print(f"ElevenLabs API Key: {ELEVENLABS_API_KEY}")
+    else:
+        # Text mode: use input()
+        user_input = input("You: ")
+        if user_input.lower() in ["switch to speech mode", "switch to speech"]:
+            SPEECH2TEXT = True
+            print("Switched to speech mode.")
+            continue
+        
+        if user_input.lower() in ["exit", "quit"]:
+            print("Goodbye!")
+            from modules.tts import speak
+            speak("Goodbye! Talk to you soon.")
+            break
 
-        # 🔹 Check if user wants Klaus to rotate motor
-        if "spin" in user_input.lower():
-            klaus_response = "Sure, I'm rotating the motor now!"
-            send_command_to_arduino("rotate")  
-            speak(klaus_response)
-            print("Klaus says:", klaus_response)
-            continue  # Prevents unnecessary calls to chat_with_gpt()
+    # Process the user input and get AI response
+    response = chat_with_gpt(user_input)
+    print("Astra:", response)
 
-        # 🔹 Get AI response
-        response = chat_with_gpt(user_input)
-
-        # 🔹 Speak response
-        print("Klaus says:", response)
-
-        # 🔹 Small delay to prevent instant re-triggering
-        #time.sleep(0.5)
+    # Update memory with the conversation turn
+    current_memory = load_memory()
+    updated_memory = add_to_memory(current_memory, astra_memory, user_input, response)
 
 
 if __name__ == "__main__":
