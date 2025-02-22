@@ -171,7 +171,6 @@ cython_debug/
 .pypirc
 output.mp3
 .DS_Store
-chat_memory.json
 input_audio.wav
 input.wav
 speech.wav
